@@ -19,7 +19,7 @@ def optimise(topology, save=True, dir='./iterations'):
     etas_avg = []
 
 # Optimising function:
-    def _optimise(t):
+    def _optimise(t, is_final_iteration):
         t.fea()
         t.sens_analysis()
         t.filter_sens_sigmund()
@@ -33,7 +33,7 @@ def optimise(topology, save=True, dir='./iterations'):
                 'dir': dir
             }
             if save:
-                create_3d_geom(t.desvars, **params)
+                create_3d_geom(t.desvars, is_final_iteration, **params)
         else:
             params = {
                 'prefix': t.probname,
@@ -66,11 +66,13 @@ def optimise(topology, save=True, dir='./iterations'):
 
     # Try CHG_STOP criteria, if not defined (error), use NUM_ITER for iterations:
     try:
+        i = 0
         while topology.change > topology.chgstop:
-            _optimise(topology)
+            _optimise(topology, i==topology.numiter)
+            i += 1
     except AttributeError:
         for i in range(topology.numiter):
-            _optimise(topology)
+            _optimise(topology, i==topology.numiter-1)
     te = time()
 
     # Print solid-void ratio info:

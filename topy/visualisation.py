@@ -10,7 +10,7 @@ import os
 import sys
 from datetime import datetime
 
-from numpy import arange, asarray, hstack
+from numpy import arange, asarray, hstack, save
 from pyvtk import CellData, LookupTable, Scalars, UnstructuredGrid, VtkData
 
 # Instruct matplotlib to use the 'Agg' if no display was detected, as matplotlib uses a GUI by default.
@@ -78,7 +78,7 @@ def create_2d_imag(x, **kwargs):
     savefig(fname, bbox_inches='tight')
     close() # close the figure
 
-def create_3d_geom(x, **kwargs):
+def create_3d_geom(x, is_final_iteration, **kwargs):
     """
     Create 3D geometry from a 3D NumPy array.
 
@@ -118,6 +118,12 @@ def create_3d_geom(x, **kwargs):
     fname = _change_fname(fname_dict, kwargs)
     # Save the domain as geometry:
     _write_geom(x, fname)
+    _write_geom(x, fname.replace(".vtk", ".npy"))
+
+    if is_final_iteration:
+        shell_command = 'C:/Users/Max/AppData/Local/Programs/Python/Python38/python.exe "E:/Development/Generative_Design_Research/topy/topy/convert_to_isosurface.py" "E:/Development/Generative_Design_Research/topy' + fname.replace(".vtk", ".npy")
+        print("Running shell command for iso-surface creation:\n", shell_command)
+        os.system(shell_command)
 
 def create_2d_msh(nelx, nely, fname):
     """
@@ -333,6 +339,9 @@ def _write_geom(x, fname):
     '''
     if fname.endswith('vtk', -3):
         _write_legacy_vtu(x, fname)
+    elif fname.endswith(".npy"):  # export numpy array to file
+        with open(fname, 'wb') as f:
+            save(f, x)
     else:
         print('Other file formats not implemented, only legacy VTK.')
         #_write_vrml2(x, fname) # future
